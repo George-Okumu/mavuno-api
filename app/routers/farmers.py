@@ -15,6 +15,7 @@ from ..models.schemas import (
     LoanHistoryOut,
     ProductionRecordOut,
 )
+from ..helpers.neo4jsdatetopythondate import convert_neo4j_value
 
 router = APIRouter(prefix="/farmers", tags=["Farmers"])
 
@@ -88,7 +89,11 @@ async def get_farmer(farmer_id: str):
         record = await result.single()
     if not record:
         raise HTTPException(status_code=404, detail=f"Farmer '{farmer_id}' not found")
-    return dict(record)
+    
+    data = dict(record)
+    data = convert_neo4j_value(data)
+
+    return data
 
 
 # Farmer farms
