@@ -9,7 +9,7 @@ from typing import AsyncGenerator
 
 from neo4j import AsyncGraphDatabase, AsyncDriver
 
-from .config import settings
+from ..config import settings
 
 _driver: AsyncDriver | None = None
 
