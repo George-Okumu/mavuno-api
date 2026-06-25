@@ -1,3 +1,8 @@
+"""
+main.py sets up the FastAPI application, connects to the Neo4j Aura database, and includes routers for farmers, lenders, groups, and analytics endpoints.
+It also provides health check endpoints to verify the service and database connectivity.
+"""
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -5,8 +10,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
-from db.neo4j import init_driver, close_driver
-from routers import farmers, lenders, groups, analytics
+from db.neo4j import close_driver, get_session, init_driver
+from routers import analytics, farmers, groups, lenders
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger("mavuno")
@@ -57,7 +62,6 @@ async def root():
 
 @app.get("/health", tags=["Health"])
 async def health():
-    from app.db.neo4j import get_session
     async with get_session() as session:
         result = await session.run("RETURN 1 AS ping")
         record = await result.single()
