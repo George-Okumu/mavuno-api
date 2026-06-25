@@ -128,7 +128,8 @@ async def get_farmer_farms(farmer_id: str):
             farmerId=farmer_id,
         )
         records = await result.data()
-    return records
+
+    return convert_neo4j_value(records)
 
 
 
@@ -175,7 +176,7 @@ async def get_credit_profile(farmer_id: str):
     data = dict(record)
     data["risks"] = [r for r in data["risks"] if r.get("riskId")]
     data["recommendations"] = [r for r in data["recommendations"] if r.get("recommendationId")]
-    return data
+    return convert_neo4j_value(data)
 
 
 # ── Financial profile ─────────────────────────────────────────────────────────
@@ -199,7 +200,8 @@ async def get_financial_profile(farmer_id: str):
             status_code=404,
             detail=f"No financial profile for farmer '{farmer_id}'",
         )
-    return dict(record)
+        
+    return convert_neo4j_value(dict(record))
 
 
 # ── Expenses ──────────────────────────────────────────────────────────────────
@@ -224,7 +226,7 @@ async def get_farmer_expenses(
     async with get_session() as session:
         result = await session.run(cypher, farmerId=farmer_id, category=category)
         records = await result.data()
-    return records
+    return convert_neo4j_value(records)
 
 
 # ── Production records ────────────────────────────────────────────────────────
@@ -260,7 +262,7 @@ async def get_production_records(farmer_id: str):
         records = await result.data()
     for rec in records:
         rec["sales"] = [s for s in rec["sales"] if s.get("saleId")]
-    return records
+    return convert_neo4j_value(records)
 
 
 # ── Loan history ──────────────────────────────────────────────────────────────
@@ -285,4 +287,4 @@ async def get_loan_history(farmer_id: str):
     async with get_session() as session:
         result = await session.run(cypher, farmerId=farmer_id)
         records = await result.data()
-    return records
+    return convert_neo4j_value(records)
