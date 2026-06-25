@@ -5,8 +5,8 @@ Analytics endpoints for graph statistics, credit score distribution, risk factor
 
 from fastapi import APIRouter, Query
 
-from db.neo4j import get_session
-from models.schemas import GraphStatsOut, WeatherSoilSnapshotOut
+from .db.neo4j import get_session
+from .models.schemas import GraphStatsOut, WeatherSoilSnapshotOut
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
