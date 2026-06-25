@@ -10,8 +10,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
-from db.neo4j import close_driver, get_session, init_driver
-from routers import analytics, farmers, groups, lenders
+from .db.neo4j import close_driver, get_session, init_driver
+from .routers import analytics, farmers, groups, lenders
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger("mavuno")
