@@ -1,3 +1,8 @@
+"""
+Configuration settings for the application, including Neo4j connection details and application environment settings.
+This module uses Pydantic's BaseSettings to load settings from environment variables or a .env
+"""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,10 +13,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     log_level: str = "INFO"
 
-    model_config = SettingsConfigDict(
-        env_file="../.env",
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()

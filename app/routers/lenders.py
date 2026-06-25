@@ -1,7 +1,11 @@
+"""
+Lenders endpoints for listing lenders, getting lender details, and retrieving applicants for a lender.
+"""
+
 from fastapi import APIRouter, HTTPException, Query
 
 from db.neo4j import get_session
-from models.schemas import LenderOut, LenderApplicantOut
+from models.schemas import LenderApplicantOut, LenderOut
 
 router = APIRouter(prefix="/lenders", tags=["Lenders"])
 
@@ -47,20 +51,12 @@ async def get_lender_applicants(
     min_score: float | None = Query(None, description="Minimum credit readiness score"),
     readiness_level: str | None = Query(None, description="Filter by readiness level"),
 ):
-    where_extra = ""
-    params: dict = {"lenderId": lender_id}
-
-    if min_score is not None:
-        where_extra += " AND cp.score >= $minScore"
-        params["minScore"] = min_score
-    if readiness_level:
-        where_extra += " AND cp.readinessLevel = $readinessLevel"
-        params["readinessLevel"] = readiness_level
-
-    cypher = f"""
-        MATCH (f:Farmer)-[al:APPLIES_TO]->(lb:LenderBank {{lenderId: $lenderId}})
+    cypher = """
+        MATCH (f:Farmer)-[al:APPLIES_TO]->(lb:LenderBank {lenderId: $lenderId})
         OPTIONAL MATCH (f)-[:HAS_CREDIT_PROFILE]->(cp:CreditReadinessProfile)
-        WHERE true {where_extra}
+        WITH f, cp, al
+        WHERE ($minScore IS NULL OR cp.score >= $minScore)
+          AND ($readinessLevel IS NULL OR cp.readinessLevel = $readinessLevel)
         RETURN
             f.farmerId        AS farmerId,
             f.fullName        AS fullName,
@@ -70,6 +66,11 @@ async def get_lender_applicants(
         ORDER BY cp.score DESC
     """
     async with get_session() as session:
-        result = await session.run(cypher, params)
+        result = await session.run(
+            cypher,
+            lenderId=lender_id,
+            minScore=min_score,
+            readinessLevel=readiness_level,
+        )
         records = await result.data()
     return records

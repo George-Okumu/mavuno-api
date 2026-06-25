@@ -1,3 +1,7 @@
+"""
+group endpoints for listing farmer groups, getting group details, and retrieving group members.
+"""
+
 from fastapi import APIRouter, HTTPException, Query
 
 from db.neo4j import get_session
@@ -11,20 +15,11 @@ async def list_groups(
     group_type: str | None = Query(None, description="e.g. Cooperative, SACCO"),
     county: str | None = Query(None),
 ):
-    where_clauses = []
-    params: dict = {}
-    if group_type:
-        where_clauses.append("g.groupType = $groupType")
-        params["groupType"] = group_type
-    if county:
-        where_clauses.append("g.county = $county")
-        params["county"] = county
-
-    where_str = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
-
-    cypher = f"""
+    cypher = """
         MATCH (g:FarmerGroup)
-        {where_str}
+        WITH g
+        WHERE ($groupType IS NULL OR g.groupType = $groupType)
+          AND ($county IS NULL OR g.county = $county)
         RETURN
             g.groupId            AS groupId,
             g.groupName          AS groupName,
@@ -35,7 +30,7 @@ async def list_groups(
         ORDER BY g.groupName
     """
     async with get_session() as session:
-        result = await session.run(cypher, params)
+        result = await session.run(cypher, groupType=group_type, county=county)
         records = await result.data()
     return records
 
