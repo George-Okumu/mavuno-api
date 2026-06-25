@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import settings
+from .config import settings
 from db.neo4j import close_driver, get_session, init_driver
 from routers import analytics, farmers, groups, lenders
 
