@@ -4,8 +4,8 @@ Lenders endpoints for listing lenders, getting lender details, and retrieving ap
 
 from fastapi import APIRouter, HTTPException, Query
 
-from .db.neo4j import get_session
-from .models.schemas import LenderApplicantOut, LenderOut
+from ..db.neo4j import get_session
+from ..models.schemas import LenderApplicantOut, LenderOut
 
 router = APIRouter(prefix="/lenders", tags=["Lenders"])
 

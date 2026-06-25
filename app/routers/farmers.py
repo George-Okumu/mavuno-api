@@ -4,8 +4,8 @@ Farmers endpoints for listing farmers, getting farmer details, and retrieving re
 
 from fastapi import APIRouter, HTTPException, Query
 
-from .db.neo4j import get_session
-from .models.schemas import (
+from ..db.neo4j import get_session
+from ..models.schemas import (
     CreditProfileOut,
     ExpenseOut,
     FarmerDetail,

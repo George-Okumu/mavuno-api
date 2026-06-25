@@ -4,8 +4,8 @@ group endpoints for listing farmer groups, getting group details, and retrieving
 
 from fastapi import APIRouter, HTTPException, Query
 
-from .db.neo4j import get_session
-from .models.schemas import FarmerGroupOut, FarmerSummary
+from ..db.neo4j import get_session
+from ..models.schemas import FarmerGroupOut, FarmerSummary
 
 router = APIRouter(prefix="/groups", tags=["Farmer Groups"])
 
