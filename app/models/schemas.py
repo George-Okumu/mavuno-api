@@ -5,6 +5,72 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 
+from typing import Literal, Optional
+
+from pydantic import BaseModel, EmailStr, field_validator
+
+Role = Literal["farmer", "lender"]
+
+
+#  Request bodies
+
+
+class RegisterIn(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    phone: Optional[str] = None
+    region: Optional[str] = None
+    role: Role = "farmer"
+
+    @field_validator("password")
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters.")
+        return v
+
+    @field_validator("name")
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Name is required.")
+        return v.strip()
+
+
+class LoginIn(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class RefreshIn(BaseModel):
+    refreshToken: str
+
+
+# ── Response bodies ─────────────────────────────────────────────────────────
+
+
+class UserOut(BaseModel):
+    userId: str
+    name: str
+    email: str
+    role: Role
+    phone: Optional[str] = None
+    region: Optional[str] = None
+    createdAt: Optional[datetime] = None
+
+
+class AuthOut(BaseModel):
+    """Returned on both login and register."""
+    accessToken: str
+    refreshToken: str
+    tokenType: str = "bearer"
+    user: UserOut
+
+
+class MessageOut(BaseModel):
+    message: str
+
 
 # ── Farmer ─────────────────────────────────────────────────────────────────
 
