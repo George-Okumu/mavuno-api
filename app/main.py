@@ -1,8 +1,8 @@
 """
-main.py sets up the FastAPI application, connects to the Neo4j Aura database, and includes routers for farmers, lenders, groups, and analytics endpoints.
+main.py sets up the FastAPI application, connects to the Neo4j Aura database, and includes
+routers for auth, farmers, lenders, groups, and analytics endpoints.
 It also provides health check endpoints to verify the service and database connectivity.
 """
-
 import logging
 from contextlib import asynccontextmanager
 
@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .db.neo4j import close_driver, get_session, init_driver
 from .routers import analytics, farmers, groups, lenders
+from .routers.auth import router as auth_router
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger("mavuno")
@@ -40,15 +41,20 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
+# ── Routers ─────────────────────────────────────────────────────────────────
+
+app.include_router(auth_router)          # /auth/register, /auth/login, …
 app.include_router(farmers.router)
 app.include_router(lenders.router)
 app.include_router(groups.router)
 app.include_router(analytics.router)
 
+
+# ── Health ───────────────────────────────────────────────────────────────────
 
 @app.get("/", tags=["Health"])
 async def root():
