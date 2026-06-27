@@ -4,9 +4,9 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 
-from jose import JWTError, jwt
+import jwt
 
-# Config (pull from env / settings)
+#  Config
 
 SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
 ALGORITHM: str = "HS256"
@@ -18,11 +18,10 @@ TokenKind = Literal["access", "refresh"]
 
 # Token creation
 
-
 def _create_token(subject: str, kind: TokenKind, expires_delta: timedelta) -> str:
     now = datetime.now(tz=timezone.utc)
     payload = {
-        "sub": subject,          # user ID
+        "sub": subject,
         "kind": kind,
         "iat": now,
         "exp": now + expires_delta,
@@ -46,14 +45,18 @@ def create_refresh_token(user_id: str) -> str:
     )
 
 
+# Token decoding
+
 def decode_token(token: str, expected_kind: TokenKind = "access") -> str:
     """
-    Decode and validate a JWT.  Returns the user ID (sub) on success.
+    Decode and validate a JWT. Returns the user ID (sub) on success.
     Raises ValueError with a human-readable message on any failure.
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError as exc:
+    except jwt.ExpiredSignatureError as exc:
+        raise ValueError("Token has expired.") from exc
+    except jwt.PyJWTError as exc:
         raise ValueError(f"Invalid token: {exc}") from exc
 
     if payload.get("kind") != expected_kind:
