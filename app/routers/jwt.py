@@ -1,22 +1,23 @@
 from __future__ import annotations
 
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 import jwt
 
-#  Config
+from ..config import settings
 
-SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
+# ── Config ──────────────────────────────────────────────────────────────────
+
+SECRET_KEY: str = settings.jwt_secret_key
 ALGORITHM: str = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
+ACCESS_TOKEN_EXPIRE_MINUTES: int = settings.access_token_expire_minutes
+REFRESH_TOKEN_EXPIRE_DAYS: int = settings.refresh_token_expire_days
 
 TokenKind = Literal["access", "refresh"]
 
 
-# Token creation
+# ── Token creation ──────────────────────────────────────────────────────────
 
 def _create_token(subject: str, kind: TokenKind, expires_delta: timedelta) -> str:
     now = datetime.now(tz=timezone.utc)
@@ -45,7 +46,7 @@ def create_refresh_token(user_id: str) -> str:
     )
 
 
-# Token decoding
+# ── Token decoding ──────────────────────────────────────────────────────────
 
 def decode_token(token: str, expected_kind: TokenKind = "access") -> str:
     """
