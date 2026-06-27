@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from app.db.neo4j import get_session
 from .dependencies import get_current_user_id
 from .jwt import create_access_token, create_refresh_token, decode_token
-from models.schemas import AuthOut, LoginIn, MessageOut, RefreshIn, RegisterIn, UserOut
+from .models.schemas import AuthOut, LoginIn, MessageOut, RefreshIn, RegisterIn, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
