@@ -1,21 +1,24 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Any, Optional
-
-from pydantic import BaseModel
-
 from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr, field_validator
 
+# ── Shared ───────────────────────────────────────────────────────────────────
+
 Role = Literal["farmer", "lender"]
 
 
-#  Request bodies
-
+# ── Auth request bodies ───────────────────────────────────────────────────────
 
 class RegisterIn(BaseModel):
+    """
+    Used by POST /auth/register.
+    Creates a :User node (identity layer).
+    Role determines post-login redirect; the full farmer/lender
+    profile is created separately during onboarding.
+    """
     name: str
     email: EmailStr
     password: str
@@ -47,10 +50,14 @@ class RefreshIn(BaseModel):
     refreshToken: str
 
 
-# ── Response bodies ─────────────────────────────────────────────────────────
-
+# ── Auth response bodies ──────────────────────────────────────────────────────
 
 class UserOut(BaseModel):
+    """
+    Represents the :User node — the auth identity.
+    Returned on login / register / /me.
+    NOT the same as FarmerDetail or LenderOut (those are profile nodes).
+    """
     userId: str
     name: str
     email: str
@@ -72,10 +79,30 @@ class MessageOut(BaseModel):
     message: str
 
 
-# ── Farmer ─────────────────────────────────────────────────────────────────
+# ── Farmer profile request bodies ─────────────────────────────────────────────
 
+class FarmerIn(BaseModel):
+    """
+    Used by POST /farmers/ to create a :Farmer profile node.
+    Linked to the :User node via [:HAS_PROFILE] after auth.
+    """
+    fullName: str
+    gender: str
+    phone: str
+    nationalId: str
+    idType: str
+    consentGiven: bool
+    dob: Optional[date] = None
+    county: Optional[str] = None
+
+
+# ── Farmer profile response bodies ────────────────────────────────────────────
 
 class FarmerBase(BaseModel):
+    """
+    Core :Farmer node fields. Base for FarmerSummary and FarmerDetail.
+    farmerId is the Neo4j node identifier — separate from userId (:User).
+    """
     farmerId: str
     fullName: str
     gender: str
@@ -87,6 +114,7 @@ class FarmerBase(BaseModel):
 
 
 class FarmerDetail(FarmerBase):
+    """Full farmer profile — returned on GET /farmers/{farmer_id}."""
     dob: Optional[date] = None
     verifiedAt: Optional[datetime] = None
     createdAt: Optional[datetime] = None
@@ -94,13 +122,13 @@ class FarmerDetail(FarmerBase):
 
 
 class FarmerSummary(FarmerBase):
+    """Lightweight listing — returned on GET /farmers/."""
     creditScore: Optional[float] = None
     readinessLevel: Optional[str] = None
     county: Optional[str] = None
 
 
-# ── Farm ────────────────────────────────────────────────────────────────────
-
+# ── Farm ─────────────────────────────────────────────────────────────────────
 
 class FarmOut(BaseModel):
     farmId: str
@@ -115,8 +143,7 @@ class FarmOut(BaseModel):
     createdAt: Optional[datetime] = None
 
 
-# ── Credit Readiness ────────────────────────────────────────────────────────
-
+# ── Credit readiness ──────────────────────────────────────────────────────────
 
 class RiskFactorOut(BaseModel):
     riskId: str
@@ -150,8 +177,7 @@ class CreditProfileOut(BaseModel):
     modelRun: Optional[AIModelRunOut] = None
 
 
-# ── Financial ───────────────────────────────────────────────────────────────
-
+# ── Financial ─────────────────────────────────────────────────────────────────
 
 class FinancialProfileOut(BaseModel):
     profileId: str
@@ -170,8 +196,7 @@ class ExpenseOut(BaseModel):
     createdAt: Optional[datetime] = None
 
 
-# ── Production & Sales ──────────────────────────────────────────────────────
-
+# ── Production & Sales ────────────────────────────────────────────────────────
 
 class SalesTransactionOut(BaseModel):
     saleId: str
@@ -194,8 +219,7 @@ class ProductionRecordOut(BaseModel):
     sales: list[SalesTransactionOut] = []
 
 
-# ── Loan History ────────────────────────────────────────────────────────────
-
+# ── Loan history ──────────────────────────────────────────────────────────────
 
 class LoanHistoryOut(BaseModel):
     loanId: str
@@ -210,8 +234,7 @@ class LoanHistoryOut(BaseModel):
     closedDate: Optional[date] = None
 
 
-# ── Farmer Group ────────────────────────────────────────────────────────────
-
+# ── Farmer group ──────────────────────────────────────────────────────────────
 
 class FarmerGroupOut(BaseModel):
     groupId: str
@@ -222,10 +245,20 @@ class FarmerGroupOut(BaseModel):
     county: str
 
 
-# ── Lender ──────────────────────────────────────────────────────────────────
+# ── Lender ────────────────────────────────────────────────────────────────────
+
+class LenderIn(BaseModel):
+    """
+    Used by POST /lenders/ to create a :Lender profile node.
+    Linked to the :User node (role="lender") via [:HAS_PROFILE] after auth.
+    """
+    lenderName: str
+    lenderType: str
+    country: str
 
 
 class LenderOut(BaseModel):
+    """Returned on GET /lenders/{lender_id}."""
     lenderId: str
     lenderName: str
     lenderType: str
@@ -233,6 +266,7 @@ class LenderOut(BaseModel):
 
 
 class LenderApplicantOut(BaseModel):
+    """Farmers who have applied for a loan — returned under lender routes."""
     farmerId: str
     fullName: str
     creditScore: Optional[float] = None
@@ -240,8 +274,7 @@ class LenderApplicantOut(BaseModel):
     appliedAt: Optional[datetime] = None
 
 
-# ── Weather / Soil ──────────────────────────────────────────────────────────
-
+# ── Weather / Soil ────────────────────────────────────────────────────────────
 
 class WeatherSoilSnapshotOut(BaseModel):
     snapshotId: str
@@ -255,8 +288,7 @@ class WeatherSoilSnapshotOut(BaseModel):
     recordedAt: Optional[datetime] = None
 
 
-# ── Graph Stats ─────────────────────────────────────────────────────────────
-
+# Graph stats
 
 class NodeCount(BaseModel):
     label: str
